@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sober</title>
+  
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#05080c">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1>Sober</h1>
+      <p>Tracker & Framsteg</p>
+    </header>
+
+    <main class="card">
+      <div class="counter-display">
+        <div class="days-number" id="daysCount">0</div>
+        <div class="days-label">Dagar Sober</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-box">
+          <span>Startdatum</span>
+          <strong id="startDateDisplay">-</strong>
+        </div>
+        <div class="info-box">
+          <span>Bästa svit</span>
+          <strong id="bestStreakDisplay">0 dagar</strong>
+        </div>
+      </div>
+    </main>
+
+    <div class="card">
+      <div class="controls">
+        <label for="startDateInput" style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Ändra startdatum:</label>
+        <input type="date" id="startDateInput">
+        <button class="btn-primary" id="resetBtn" style="margin-top: 10px;">Sätt nytt startdatum</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="btn-group">
+        <button class="btn-outline" id="exportBtn">Exportera JSON</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--accent-purple);">Historik & Resets</h3>
+      <ul class="history-list" id="historyList">
+        <li class="history-item"><span>Ingen historik än.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,21 +1,16 @@
 {
+  "name": "Sober",
   "short_name": "Sober",
-  "name": "Sober Tracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#05080c",
+  "theme_color": "#05080c",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": "./index.html",
-  "background_color": "#0f0f11",
-  "theme_color": "#0f0f11",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }
