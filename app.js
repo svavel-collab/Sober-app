@@ -2,15 +2,23 @@ const STORAGE_KEY = 'sober_trackers_data';
 const TRASH_KEY = 'sober_trackers_trash';
 
 /**
+ * @typedef {Object} HistoryEntry
+ * @property {string} id
+ * @property {string} startDate
+ * @property {string} endDate
+ */
+
+/**
  * @typedef {Object} Tracker
  * @property {string} id
  * @property {string} name
  * @property {string} startDate
+ * @property {HistoryEntry[]} [history]
  */
 
 /** @type {Tracker[]} */
 let trackers = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') || [
-  { id: '1', name: 'Alkohol', startDate: new Date().toISOString() }
+  { id: '1', name: 'Alkohol', startDate: new Date().toISOString(), history: [] }
 ];
 
 /** @type {Tracker[]} */
@@ -45,7 +53,14 @@ const closeTrashBtn = document.getElementById('close-trash-btn');
 const trashListEl = document.getElementById('trash-list');
 const emptyTrashBtn = document.getElementById('empty-trash-btn');
 
+// History Modal
+const historyModal = document.getElementById('history-modal');
+const closeHistoryBtn = document.getElementById('close-history-btn');
+const historyListEl = document.getElementById('history-list');
+const historyModalTitleEl = document.getElementById('history-modal-title');
+
 const MONTH_NAMES = ['JAN.', 'FEB.', 'MAR.', 'APR.', 'MAJ', 'JUN.', 'JUL.', 'AUG.', 'SEP.', 'OKT.', 'NOV.', 'DEC.'];
+const MONTH_NAMES_FULL = ['Jan', 'Feb', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
 
 function saveTrackers() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(trackers));
@@ -61,6 +76,34 @@ function updateHeaderDate() {
   const day = now.getDate();
   const month = MONTH_NAMES[now.getMonth()].toLowerCase().replace('.', '');
   currentDateEl.textContent = `${day} ${month}`;
+}
+
+function getFormattedDateYYMMDD() {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
+
+// Omvandlar ett Date-objekt till lokalt format yyyy-MM-ddThh:mm för input-fältet
+function toLocalDatetimeString(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const MM = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const mm = pad(date.getMinutes());
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+}
+
+// Tolkar datetime-local strängen "YYYY-MM-DDTHH:mm" exakt i lokal tid utan tidszonsförskjutningar
+function parseLocalDatetime(value) {
+  if (!value) return new Date();
+  const [datePart, timePart] = value.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes] = timePart.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
 /**
@@ -122,6 +165,38 @@ function getFormattedStartDate(startDateString) {
   };
 }
 
+/**
+ * Formaterar historikdatum: "11 Jan - 23 Mars, 2025"
+ * @param {string} startStr
+ * @param {string} endStr
+ */
+function formatHistoryDateRange(startStr, endStr) {
+  const d1 = new Date(startStr);
+  const d2 = new Date(endStr);
+  
+  const d1Day = d1.getDate();
+  const d1Month = MONTH_NAMES_FULL[d1.getMonth()];
+  
+  const d2Day = d2.getDate();
+  const d2Month = MONTH_NAMES_FULL[d2.getMonth()];
+  const d2Year = d2.getFullYear();
+
+  return `${d1Day} ${d1Month} - ${d2Day} ${d2Month}, ${d2Year}`;
+}
+
+/**
+ * Räknar ut hela dagar mellan två datum
+ * @param {string} startStr
+ * @param {string} endStr
+ */
+function calculateDaysBetween(startStr, endStr) {
+  const d1 = new Date(startStr);
+  const d2 = new Date(endStr);
+  const diffTime = Math.abs(d2.getTime() - d1.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return `${diffDays}d`;
+}
+
 function renderTrackers() {
   if (!trackerList) return;
   trackerList.innerHTML = '';
@@ -143,7 +218,12 @@ function renderTrackers() {
         <div class="card-timer">${timeFormatted}</div>
         <div class="card-title">${escapeHtml(tracker.name)}</div>
       </div>
-      <button class="btn-delete-icon" onclick="deleteTracker('${tracker.id}')" aria-label="Ta bort">✕</button>
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <button class="btn-history-icon" onclick="openHistoryModal('${tracker.id}')" aria-label="Historik" title="Visa historik">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </button>
+        <button class="btn-delete-icon" onclick="deleteTracker('${tracker.id}')" aria-label="Ta bort">✕</button>
+      </div>
     `;
 
     trackerList.appendChild(card);
@@ -187,10 +267,61 @@ function renderTrash() {
  */
 function resetTracker(id) {
   if (confirm('Vill du nollställa denna kategori till just nu?')) {
-    trackers = trackers.map(t => t.id === id ? { ...t, startDate: new Date().toISOString() } : t);
+    const now = new Date().toISOString();
+    trackers = trackers.map(t => {
+      if (t.id === id) {
+        const history = t.history || [];
+        history.unshift({
+          id: Date.now().toString(),
+          startDate: t.startDate,
+          endDate: now
+        });
+        return { ...t, startDate: now, history };
+      }
+      return t;
+    });
     saveTrackers();
     renderTrackers();
   }
+}
+
+/**
+ * @param {string} id
+ */
+function openHistoryModal(id) {
+  const tracker = trackers.find(t => t.id === id);
+  if (!tracker || !historyModal || !historyListEl || !historyModalTitleEl) return;
+
+  historyModalTitleEl.textContent = `Historik - ${tracker.name}`;
+  historyListEl.innerHTML = '';
+
+  const history = tracker.history || [];
+
+  if (history.length === 0) {
+    historyListEl.innerHTML = '<div class="history-empty">Ingen historik ännu</div>';
+  } else {
+    history.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      
+      const rangeText = formatHistoryDateRange(item.startDate, item.endDate);
+      const daysText = calculateDaysBetween(item.startDate, item.endDate);
+
+      div.innerHTML = `
+        <div class="history-item-left">
+          <svg class="history-reset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          <span class="history-dates">${rangeText}</span>
+        </div>
+        <span class="history-days">${daysText}</span>
+      `;
+      historyListEl.appendChild(div);
+    });
+  }
+
+  historyModal.classList.remove('hidden');
 }
 
 /**
@@ -205,8 +336,7 @@ function openEditModal(id) {
   nameInput.value = tracker.name;
 
   const d = new Date(tracker.startDate);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  dateInput.value = d.toISOString().slice(0, 16);
+  dateInput.value = toLocalDatetimeString(d);
 
   modal.classList.remove('hidden');
 }
@@ -256,6 +386,7 @@ window.resetTracker = resetTracker;
 window.deleteTracker = deleteTracker;
 window.openEditModal = openEditModal;
 window.restoreTracker = restoreTracker;
+window.openHistoryModal = openHistoryModal;
 
 // Event Listeners - Kategori Modal
 if (openModalBtn && modal) {
@@ -267,8 +398,7 @@ if (openModalBtn && modal) {
     nameInput.value = '';
 
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    dateInput.value = now.toISOString().slice(0, 16);
+    dateInput.value = toLocalDatetimeString(now);
 
     modal.classList.remove('hidden');
   });
@@ -285,15 +415,32 @@ if (addForm && modal) {
 
     const editId = editIdInput.value;
     const nameVal = nameInput.value.trim();
-    const dateVal = new Date(dateInput.value).toISOString();
+    
+    // Använd parseLocalDatetime för att undvika tidszonsförskjutning
+    const parsedDate = parseLocalDatetime(dateInput.value);
+    const newDateIso = parsedDate.toISOString();
 
     if (editId) {
-      trackers = trackers.map(t => t.id === editId ? { ...t, name: nameVal, startDate: dateVal } : t);
+      trackers = trackers.map(t => {
+        if (t.id === editId) {
+          const history = t.history || [];
+          if (t.startDate !== newDateIso) {
+            history.unshift({
+              id: Date.now().toString(),
+              startDate: t.startDate,
+              endDate: newDateIso
+            });
+          }
+          return { ...t, name: nameVal, startDate: newDateIso, history };
+        }
+        return t;
+      });
     } else {
       trackers.push({
         id: Date.now().toString(),
         name: nameVal,
-        startDate: dateVal
+        startDate: newDateIso,
+        history: []
       });
     }
 
@@ -304,6 +451,11 @@ if (addForm && modal) {
     editIdInput.value = '';
     modal.classList.add('hidden');
   });
+}
+
+// Event Listeners - Historik Modal
+if (closeHistoryBtn && historyModal) {
+  closeHistoryBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
 }
 
 // Event Listeners - Inställningar (Import/Export)
@@ -319,7 +471,7 @@ if (exportBtn) {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trackers, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `sober_backup_${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute("download", `sober_${getFormattedDateYYMMDD()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -336,15 +488,18 @@ if (importBtnTrigger && importFileInput) {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const importedData = JSON.parse(event.target?.result as string);
-        if (Array.isArray(importedData)) {
-          trackers = importedData;
-          saveTrackers();
-          renderTrackers();
-          alert('Data har importerats framgångsrikt!');
-          settingsModal?.classList.add('hidden');
-        } else {
-          alert('Ogiltigt filformat.');
+        const fileContent = event.target ? event.target.result : null;
+        if (typeof fileContent === 'string') {
+          const importedData = JSON.parse(fileContent);
+          if (Array.isArray(importedData)) {
+            trackers = importedData;
+            saveTrackers();
+            renderTrackers();
+            alert('Data har importerats framgångsrikt!');
+            settingsModal?.classList.add('hidden');
+          } else {
+            alert('Ogiltigt filformat.');
+          }
         }
       } catch (err) {
         alert('Kunde inte läsa filen: ' + err);

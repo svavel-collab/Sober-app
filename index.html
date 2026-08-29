@@ -3,91 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0d0d12">
-  <title>Sober</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Sober Trackers</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="app-container">
-    <header class="app-header">
-      <div class="header-title">
-        <h1>Sober</h1>
-        <span id="current-date" class="header-date"></span>
-      </div>
-      <div class="header-actions">
-        <button id="open-trash-btn" class="btn-icon" aria-label="Papperskorg" title="Papperskorg">🗑️</button>
-        <button id="open-settings-btn" class="btn-icon" aria-label="Inställningar" title="Import / Export">⚙️</button>
-        <button id="open-modal-btn" class="btn-add" aria-label="Lägg till kategori">+</button>
-      </div>
-    </header>
+  <header class="header">
+    <div class="header-left">
+      <button id="open-trash-btn" class="icon-btn" aria-label="Papperskorg" title="Papperskorg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+      <button id="open-settings-btn" class="icon-btn" aria-label="Inställningar" title="Inställningar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <div id="current-date" class="header-date">--</div>
+    
+    <button id="open-modal-btn" class="icon-btn btn-add" aria-label="Lägg till" title="Lägg till klocka">+</button>
+  </header>
 
-    <main id="tracker-list" class="tracker-list">
-      <!-- Kategori-kort renderas dynamiskt här -->
-    </main>
-  </div>
+  <main id="tracker-list" class="tracker-list">
+    <!-- Kort genereras dynamiskt -->
+  </main>
 
-  <!-- Modal för att lägga till eller redigera kategori -->
+  <!-- Add / Edit Modal -->
   <div id="modal" class="modal hidden">
     <div class="modal-content">
-      <h2 id="modal-title">Ny kategori</h2>
+      <div class="modal-header">
+        <h2 id="modal-title">Ny kategori</h2>
+        <button id="close-modal-btn" class="btn-close">✕</button>
+      </div>
       <form id="add-form">
-        <input type="hidden" id="edit-id" value="">
-        
-        <label for="category-name">Namn</label>
-        <input type="text" id="category-name" placeholder="t.ex. Alkohol, Snus, Amfetamin" required>
-
-        <label for="start-date">Startdatum & tid</label>
-        <input type="datetime-local" id="start-date" required>
-
-        <div class="modal-actions">
-          <button type="button" id="close-modal-btn" class="btn-secondary">Avbryt</button>
-          <button type="submit" class="btn-primary">Spara</button>
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+          <label for="category-name">Namn</label>
+          <input type="text" id="category-name" required placeholder="t.ex. Alkohol">
         </div>
+        <div class="form-group">
+          <label for="start-date">Startdatum & tid</label>
+          <input type="datetime-local" id="start-date" required>
+        </div>
+        <button type="submit" class="btn-submit">Spara</button>
       </form>
     </div>
   </div>
 
-  <!-- Modal för Import / Export (Kugghjul) -->
-  <div id="settings-modal" class="modal hidden">
+  <!-- History Modal -->
+  <div id="history-modal" class="modal hidden">
     <div class="modal-content">
-      <h2>Datahantering</h2>
-      <p class="modal-desc">Exportera din data som säkerhetskopia eller importera sparad data.</p>
-      <div class="settings-buttons">
-        <button id="export-btn" class="btn-primary">Exportera JSON</button>
-        <button id="import-btn-trigger" class="btn-secondary-bordered">Importera JSON</button>
-        <input type="file" id="import-file-input" accept=".json" style="display: none;">
+      <div class="modal-header">
+        <h2 id="history-modal-title">Historik</h2>
+        <button id="close-history-btn" class="btn-close">✕</button>
       </div>
-      <div class="modal-actions">
-        <button type="button" id="close-settings-btn" class="btn-secondary">Stäng</button>
+      <div id="history-list" class="history-list">
+        <!-- Historikposter renderas dynamiskt -->
       </div>
     </div>
   </div>
 
-  <!-- Modal för Papperskorg -->
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Inställningar</h2>
+        <button id="close-settings-btn" class="btn-close">✕</button>
+      </div>
+      <div class="settings-actions">
+        <button id="export-btn" class="btn-action">Exportera data (JSON)</button>
+        <button id="import-btn-trigger" class="btn-action">Importerad data (JSON)</button>
+        <input type="file" id="import-file-input" accept=".json" class="hidden">
+      </div>
+    </div>
+  </div>
+
+  <!-- Trash Modal -->
   <div id="trash-modal" class="modal hidden">
     <div class="modal-content">
-      <h2>Papperskorg</h2>
+      <div class="modal-header">
+        <h2>Papperskorg</h2>
+        <button id="close-trash-btn" class="btn-close">✕</button>
+      </div>
       <div id="trash-list" class="trash-list">
-        <!-- Raderade poster hamnar här -->
+        <!-- Raderade objekt renderas här -->
       </div>
-      <div class="modal-actions space-between">
-        <button type="button" id="empty-trash-btn" class="btn-danger-text">Töm papperskorg</button>
-        <button type="button" id="close-trash-btn" class="btn-secondary">Stäng</button>
-      </div>
+      <button id="empty-trash-btn" class="btn-danger">Töm papperskorg</button>
     </div>
   </div>
 
   <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
-          console.error('Service Worker registrering misslyckades:', err);
-        });
-      });
-    }
-  </script>
 </body>
 </html>
