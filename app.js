@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'sober_app_obsidian_v9';
+const STORAGE_KEY = 'sober_app_obsidian_v10';
 
 let appData = {
   categories: [
@@ -59,7 +59,7 @@ function render() {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <div style="display: flex; align-items: center; flex: 1; overflow: hidden;">
+      <div style="display: flex; align-items: center; flex: 1; overflow: hidden; cursor: pointer;" onclick="openEditModal('${cat.id}')" title="Klicka för att redigera">
         <div class="date-box">
           <div class="day-num">${dayNum}</div>
           <div class="day-month">${monthStr}</div>
@@ -70,7 +70,7 @@ function render() {
         </div>
       </div>
       <div class="action-btns">
-        <button class="action-icon" onclick="resetCategory('${cat.id}')" title="Nollställ">⏱️</button>
+        <button class="action-icon" onclick="resetCategory('${cat.id}')" title="Nollställ tid">⏱️</button>
         <button class="action-icon" onclick="deleteCategory('${cat.id}')" title="Ta bort">✕</button>
       </div>
     `;
@@ -163,7 +163,6 @@ function permanentDelete(id) {
   renderTrash();
 }
 
-// Hantera papperskorgs-knappen i toppmenyn
 document.getElementById('trashBinBtn').addEventListener('click', () => {
   renderTrash();
   document.getElementById('trashModalOverlay').style.display = 'flex';
@@ -175,6 +174,7 @@ function closeTrashModal() {
 
 document.getElementById('addCatBtn').addEventListener('click', () => {
   document.getElementById('modalTitle').textContent = 'Ny kategori';
+  document.getElementById('editCatId').value = '';
   document.getElementById('catNameInput').value = '';
   
   const now = new Date();
@@ -184,20 +184,44 @@ document.getElementById('addCatBtn').addEventListener('click', () => {
   document.getElementById('modalOverlay').style.display = 'flex';
 });
 
+function openEditModal(id) {
+  const cat = appData.categories.find(c => c.id === id);
+  if (!cat) return;
+
+  document.getElementById('modalTitle').textContent = 'Redigera kategori';
+  document.getElementById('editCatId').value = cat.id;
+  document.getElementById('catNameInput').value = cat.name;
+
+  const d = new Date(cat.startDate);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  document.getElementById('catDateInput').value = d.toISOString().slice(0, 16);
+
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
 function closeModal() {
   document.getElementById('modalOverlay').style.display = 'none';
 }
 
 function saveCategory() {
+  const editId = document.getElementById('editCatId').value;
   const name = document.getElementById('catNameInput').value.trim();
   const dateVal = document.getElementById('catDateInput').value;
   if (!name || !dateVal) return;
 
-  appData.categories.push({
-    id: Date.now().toString(),
-    name: name,
-    startDate: new Date(dateVal).toISOString()
-  });
+  if (editId) {
+    const cat = appData.categories.find(c => c.id === editId);
+    if (cat) {
+      cat.name = name;
+      cat.startDate = new Date(dateVal).toISOString();
+    }
+  } else {
+    appData.categories.push({
+      id: Date.now().toString(),
+      name: name,
+      startDate: new Date(dateVal).toISOString()
+    });
+  }
 
   saveData();
   render();

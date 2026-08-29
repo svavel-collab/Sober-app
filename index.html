@@ -30,10 +30,11 @@
     <div id="categoriesContainer" class="list-container"></div>
   </div>
 
-  <!-- Modal för ny kategori -->
+  <!-- Modal för Ny / Redigera kategori -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card">
       <h3 id="modalTitle" style="color:var(--accent-purple); margin-bottom:12px; font-size:1.1rem;">Ny kategori</h3>
+      <input type="hidden" id="editCatId">
       <input type="text" id="catNameInput" placeholder="Namn (t.ex. Alkohol)">
       <label style="font-size:0.8rem; color:var(--text-muted); margin-top:12px; display:block;">Startdatum & tid:</label>
       <input type="datetime-local" id="catDateInput">
@@ -44,13 +45,11 @@
     </div>
   </div>
 
-  <!-- Modal för Papperskorg (Återställ borttagna) -->
+  <!-- Modal för Papperskorg -->
   <div class="modal-overlay" id="trashModalOverlay">
     <div class="modal-card" style="max-height: 80vh; display: flex; flex-direction: column;">
       <h3 style="color:var(--accent-purple); margin-bottom:12px; font-size:1.1rem;">Papperskorg</h3>
-      <div id="trashContainer" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 50vh;">
-        <!-- Borttagna objekt dyker upp här -->
-      </div>
+      <div id="trashContainer" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 50vh;"></div>
       <div class="btn-group">
         <button class="btn-outline" onclick="closeTrashModal()" style="width:100%;">Stäng</button>
       </div>
