@@ -6,7 +6,7 @@
 }
 
 body {
-  background-color: #0b0f12;
+  background-color: #08060d;
   color: #ffffff;
   padding: 16px;
   max-width: 480px;
@@ -22,40 +22,64 @@ body {
   padding: 12px 4px 20px 4px;
 }
 
-.header-left {
+.header-brand {
   display: flex;
-  gap: 8px;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
 }
 
 .header-date {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #8e8e93;
+  color: #a875ff;
   text-transform: lowercase;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .icon-btn {
-  background: #1c1c1e;
-  border: none;
-  color: #ffffff;
-  width: 38px;
-  height: 38px;
+  background: #141122;
+  border: 1px solid rgba(168, 117, 255, 0.2);
+  color: #a875ff;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.2rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .icon-btn:hover {
-  background-color: #2c2c2e;
+  background-color: #211b38;
+  color: #ffffff;
+  border-color: rgba(168, 117, 255, 0.4);
 }
 
 .btn-add {
-  font-size: 1.4rem;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #ffffff;
+  border: none;
+  font-size: 1.3rem;
   line-height: 1;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
+}
+
+.btn-add:hover {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.7);
 }
 
 /* Tracker List & Cards */
@@ -66,18 +90,21 @@ body {
 }
 
 .card {
-  background-color: #161b22;
-  border-radius: 12px;
+  background-color: #120f1d; /* Mycket mörk obsidian-lila */
+  border: 1px solid rgba(168, 117, 255, 0.15);
+  border-left: 4px solid #a875ff;
+  border-radius: 14px;
   padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 .date-box {
-  background-color: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 8px;
+  background-color: #0a0812;
+  border: 1px solid rgba(168, 117, 255, 0.25);
+  border-radius: 10px;
   width: 52px;
   height: 52px;
   display: flex;
@@ -89,7 +116,7 @@ body {
 }
 
 .date-box-day {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   line-height: 1.1;
   color: #ffffff;
@@ -97,9 +124,11 @@ body {
 
 .date-box-month {
   font-size: 0.65rem;
-  font-weight: 600;
-  color: #8b949e;
+  font-weight: 700;
+  color: #a875ff;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .card-content {
@@ -108,16 +137,17 @@ body {
 }
 
 .card-timer {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 600;
-  color: #4cd964;
-  font-family: monospace;
+  color: #c499ff; /* Lysande neonlila */
+  text-shadow: 0 0 8px rgba(196, 153, 255, 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   margin-bottom: 2px;
 }
 
 .card-title {
   font-size: 1.05rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
@@ -127,33 +157,35 @@ body {
 .btn-history-icon {
   background: none;
   border: none;
-  color: #a0a0a0;
+  color: #7a6e99;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: color 0.2s, background-color 0.2s;
 }
 
 .btn-history-icon:hover {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.1);
+  color: #c499ff;
+  background-color: rgba(168, 117, 255, 0.12);
 }
 
 .btn-delete-icon {
   background: none;
   border: none;
-  color: #6e7681;
+  color: #5c5275;
   font-size: 1.1rem;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: color 0.2s, background-color 0.2s;
 }
 
 .btn-delete-icon:hover {
-  color: #ff453a;
+  color: #ff5c5c;
+  background-color: rgba(255, 92, 92, 0.12);
 }
 
 /* Modals */
@@ -163,7 +195,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,16 +205,17 @@ body {
 }
 
 .modal.hidden {
-  display: none;
+  display: none !important;
 }
 
 .modal-content {
-  background-color: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 16px;
+  background-color: #120f1d;
+  border: 1px solid rgba(168, 117, 255, 0.25);
+  border-radius: 18px;
   width: 100%;
   max-width: 400px;
   padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
 .modal-header {
@@ -199,7 +233,7 @@ body {
 .btn-close {
   background: none;
   border: none;
-  color: #8b949e;
+  color: #7a6e99;
   font-size: 1.2rem;
   cursor: pointer;
 }
@@ -213,12 +247,12 @@ body {
 
 .form-group label {
   font-size: 0.85rem;
-  color: #8b949e;
+  color: #a875ff;
 }
 
 .form-group input {
-  background-color: #0d1117;
-  border: 1px solid #30363d;
+  background-color: #0a0812;
+  border: 1px solid rgba(168, 117, 255, 0.25);
   border-radius: 8px;
   padding: 10px 12px;
   color: #ffffff;
@@ -227,7 +261,8 @@ body {
 }
 
 .form-group input:focus {
-  border-color: #58a6ff;
+  border-color: #a875ff;
+  box-shadow: 0 0 8px rgba(168, 117, 255, 0.3);
 }
 
 .btn-submit, .btn-action, .btn-danger {
@@ -242,12 +277,12 @@ body {
 }
 
 .btn-submit, .btn-action {
-  background-color: #238636;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
   color: #ffffff;
 }
 
 .btn-submit:hover, .btn-action:hover {
-  background-color: #2ea043;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
 
 .btn-danger {
@@ -278,17 +313,17 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0d1117;
+  background-color: #0a0812;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #30363d;
+  border: 1px solid rgba(168, 117, 255, 0.2);
 }
 
 .btn-restore {
-  background-color: #21262d;
-  border: 1px solid #30363d;
-  color: #58a6ff;
-  padding: 4px 8px;
+  background-color: #141122;
+  border: 1px solid rgba(168, 117, 255, 0.3);
+  color: #a875ff;
+  padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.85rem;
@@ -296,7 +331,7 @@ body {
 
 .empty-trash-msg {
   text-align: center;
-  color: #8b949e;
+  color: #7a6e99;
   padding: 16px 0;
 }
 
@@ -312,7 +347,7 @@ body {
 
 .history-empty {
   text-align: center;
-  color: #777777;
+  color: #7a6e99;
   padding: 20px 0;
   font-size: 0.95rem;
 }
@@ -321,8 +356,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #142e20;
-  border: 1px solid #1e4630;
+  background-color: #0a0812;
+  border: 1px solid rgba(168, 117, 255, 0.25);
   border-radius: 8px;
   padding: 12px 14px;
   gap: 12px;
@@ -337,19 +372,19 @@ body {
 .history-reset-icon {
   width: 18px;
   height: 18px;
-  color: #4cd964;
+  color: #a875ff;
   flex-shrink: 0;
 }
 
 .history-dates {
-  color: #4cd964;
+  color: #ffffff;
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.3px;
 }
 
 .history-days {
-  color: #4cd964;
+  color: #c499ff;
   font-size: 0.95rem;
   font-weight: 700;
 }

@@ -86,7 +86,6 @@ function getFormattedDateYYMMDD() {
   return `${yy}${mm}${dd}`;
 }
 
-// Omvandlar ett Date-objekt till lokalt format yyyy-MM-ddThh:mm för input-fältet
 function toLocalDatetimeString(date) {
   const pad = (n) => String(n).padStart(2, '0');
   const yyyy = date.getFullYear();
@@ -97,7 +96,6 @@ function toLocalDatetimeString(date) {
   return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
 }
 
-// Tolkar datetime-local strängen "YYYY-MM-DDTHH:mm" exakt i lokal tid utan tidszonsförskjutningar
 function parseLocalDatetime(value) {
   if (!value) return new Date();
   const [datePart, timePart] = value.split('T');
@@ -106,9 +104,6 @@ function parseLocalDatetime(value) {
   return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
-/**
- * @param {string} startDateString
- */
 function calculateTimeDiff(startDateString) {
   const start = new Date(startDateString);
   const now = new Date();
@@ -146,14 +141,11 @@ function calculateTimeDiff(startDateString) {
     years--;
   }
 
-  const pad = (/** @type {number} */ num) => String(num).padStart(2, '0');
+  const pad = (num) => String(num).padStart(2, '0');
 
   return `${years}å ${months}m ${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
-/**
- * @param {string} startDateString
- */
 function getFormattedStartDate(startDateString) {
   const d = new Date(startDateString);
   if (isNaN(d.getTime())) {
@@ -165,11 +157,6 @@ function getFormattedStartDate(startDateString) {
   };
 }
 
-/**
- * Formaterar historikdatum: "11 Jan - 23 Mars, 2025"
- * @param {string} startStr
- * @param {string} endStr
- */
 function formatHistoryDateRange(startStr, endStr) {
   const d1 = new Date(startStr);
   const d2 = new Date(endStr);
@@ -184,11 +171,6 @@ function formatHistoryDateRange(startStr, endStr) {
   return `${d1Day} ${d1Month} - ${d2Day} ${d2Month}, ${d2Year}`;
 }
 
-/**
- * Räknar ut hela dagar mellan två datum
- * @param {string} startStr
- * @param {string} endStr
- */
 function calculateDaysBetween(startStr, endStr) {
   const d1 = new Date(startStr);
   const d2 = new Date(endStr);
@@ -262,9 +244,6 @@ function renderTrash() {
   });
 }
 
-/**
- * @param {string} id
- */
 function resetTracker(id) {
   if (confirm('Vill du nollställa denna kategori till just nu?')) {
     const now = new Date().toISOString();
@@ -285,9 +264,6 @@ function resetTracker(id) {
   }
 }
 
-/**
- * @param {string} id
- */
 function openHistoryModal(id) {
   const tracker = trackers.find(t => t.id === id);
   if (!tracker || !historyModal || !historyListEl || !historyModalTitleEl) return;
@@ -324,9 +300,6 @@ function openHistoryModal(id) {
   historyModal.classList.remove('hidden');
 }
 
-/**
- * @param {string} id
- */
 function openEditModal(id) {
   const tracker = trackers.find(t => t.id === id);
   if (!tracker || !modal || !modalTitleEl || !nameInput || !dateInput || !editIdInput) return;
@@ -341,9 +314,6 @@ function openEditModal(id) {
   modal.classList.remove('hidden');
 }
 
-/**
- * @param {string} id
- */
 function deleteTracker(id) {
   const itemToDelete = trackers.find(t => t.id === id);
   if (!itemToDelete) return;
@@ -356,9 +326,6 @@ function deleteTracker(id) {
   renderTrackers();
 }
 
-/**
- * @param {string} id
- */
 function restoreTracker(id) {
   const itemToRestore = trash.find(t => t.id === id);
   if (!itemToRestore) return;
@@ -372,9 +339,6 @@ function restoreTracker(id) {
   renderTrash();
 }
 
-/**
- * @param {string} str
- */
 function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
@@ -416,7 +380,6 @@ if (addForm && modal) {
     const editId = editIdInput.value;
     const nameVal = nameInput.value.trim();
     
-    // Använd parseLocalDatetime för att undvika tidszonsförskjutning
     const parsedDate = parseLocalDatetime(dateInput.value);
     const newDateIso = parsedDate.toISOString();
 
