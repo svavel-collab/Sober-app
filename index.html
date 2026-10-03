@@ -4,79 +4,89 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sober</title>
-  
-  <link rel="icon" type="image/png" sizes="512x512" href="icon.png">
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#05080c">
-
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="app-container">
+    
+    <!-- Top Navigation -->
     <header class="top-nav">
       <div class="header-left-group">
         <h1 class="header-sober">Sober</h1>
-        <div class="date-header" id="currentDateHeader">29 aug</div>
+        <span class="date-header" id="currentDateHeader"></span>
       </div>
       <div class="nav-icons-right">
         <button class="icon-btn" id="trashBinBtn" title="Papperskorg">🗑️</button>
-        <button class="icon-btn" id="settingsBtn" title="Inställningar / Import / Export">⚙️</button>
-        <button class="icon-btn" id="addCatBtn" title="Lägg till">+</button>
+        <button class="icon-btn" id="settingsBtn" title="Inställningar">⚙️</button>
+        <button class="icon-btn" id="addCatBtn" title="Lägg till">+ </button>
       </div>
     </header>
 
-    <div id="categoriesContainer" class="list-container"></div>
+    <!-- Category List -->
+    <main class="list-container" id="categoriesContainer"></main>
+
   </div>
 
-  <!-- Modal för Ny / Redigera kategori -->
+  <!-- Modal: Add / Edit Category -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card">
-      <h3 id="modalTitle" style="color:var(--accent-purple); margin-bottom:12px; font-size:1.1rem;">Ny kategori</h3>
+      <h2 id="modalTitle" style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Ny kategori</h2>
       <input type="hidden" id="editCatId">
-      <input type="text" id="catNameInput" placeholder="Namn (t.ex. Alkohol)">
-      <label style="font-size:0.8rem; color:var(--text-muted); margin-top:12px; display:block;">Startdatum & tid:</label>
-      <input type="datetime-local" id="catDateInput">
-      <div class="btn-group" style="margin-top:16px;">
+      
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Kategorinamn:</label>
+        <input type="text" id="catNameInput" placeholder="T.ex. Alkohol">
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Startdatum & tid:</label>
+        <input type="datetime-local" id="catDateInput">
+      </div>
+
+      <div class="btn-group">
         <button class="btn-outline" onclick="closeModal()">Avbryt</button>
         <button class="btn-primary" onclick="saveCategory()">Spara</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal för Papperskorg -->
-  <div class="modal-overlay" id="trashModalOverlay">
-    <div class="modal-card" style="max-height: 80vh; display: flex; flex-direction: column;">
-      <h3 style="color:var(--accent-purple); margin-bottom:12px; font-size:1.1rem;">Papperskorg</h3>
-      <div id="trashContainer" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 50vh;"></div>
-      <div class="btn-group">
-        <button class="btn-outline" onclick="closeTrashModal()" style="width:100%;">Stäng</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal för Inställningar (JSON Import/Export) -->
+  <!-- Modal: Settings (Export/Import) -->
   <div class="modal-overlay" id="settingsModalOverlay">
     <div class="modal-card">
-      <h3 style="color:var(--accent-purple); margin-bottom:12px; font-size:1.1rem;">Inställningar & Data</h3>
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Exportera eller importera din JSON-data för säkerhets skull.</p>
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn-primary" onclick="exportData()">Exportera JSON</button>
-        <label class="btn-outline" style="text-align: center; cursor: pointer; display: block; padding: 12px; border-radius: 12px;">
-          Importera JSON <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+      <h2 style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Inställningar</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+        Säkerhetskopiera din data eller återställ från en tidigare JSON-fil.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+        <button class="btn-primary" onclick="exportData()">Spara ner fil (Export)</button>
+        
+        <label class="btn-outline" style="text-align: center; cursor: pointer; display: block;">
+          Ladda upp fil (Import)
+          <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importData(event)">
         </label>
       </div>
-      <div style="margin-top: 16px;">
-        <button class="btn-outline" onclick="closeSettingsModal()" style="width:100%;">Stäng</button>
-      </div>
+
+      <button class="btn-outline" style="width: 100%;" onclick="closeSettingsModal()">Stäng</button>
     </div>
   </div>
 
-  <!-- Egen bekräftelsemodal -->
+  <!-- Modal: Trash Bin -->
+  <div class="modal-overlay" id="trashModalOverlay">
+    <div class="modal-card">
+      <h2 style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Papperskorg</h2>
+      <div id="trashContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; margin-bottom: 20px;">
+        <!-- Dynamiska rader hamnar här -->
+      </div>
+      <button class="btn-outline" style="width: 100%;" onclick="closeTrashModal()">Stäng</button>
+    </div>
+  </div>
+
+  <!-- Modal: Custom Confirm Dialog -->
   <div class="modal-overlay" id="confirmModalOverlay">
     <div class="modal-card">
-      <h3 id="confirmModalText" style="color:var(--text-main); margin-bottom:20px; font-size:1.05rem; font-weight:600;">Radera inlägget?</h3>
+      <p id="confirmModalText" style="margin-bottom: 20px; color: #fff; font-size: 1rem; text-align: center; font-weight: 600;"></p>
       <div class="btn-group">
         <button class="btn-outline" id="confirmCancelBtn">Avbryt</button>
         <button class="btn-primary" id="confirmOkBtn">OK</button>
