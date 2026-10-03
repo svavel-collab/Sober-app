@@ -19,7 +19,6 @@ function loadData() {
     }
   }
   
-  // Om inga kategorier finns sedan tidigare, lägg till standardkategorier enbart vid första start
   if (!appData.categories || appData.categories.length === 0) {
     appData.categories = [
       { id: '1', name: 'Alkohol', startDate: new Date().toISOString() },
@@ -68,6 +67,35 @@ function formatTimeDifference(startDateStr) {
   return `${years}å ${months}m ${remainingDays}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
+function getReachedMilestones(startDateStr) {
+  const start = new Date(startDateStr);
+  const now = new Date();
+  if (isNaN(start.getTime())) return [];
+
+  const diffMs = Math.max(0, now - start);
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const milestones = [];
+
+  // 30 dagar
+  if (totalDays >= 30) milestones.push({ id: '30d', label: '30 dagar', icon: '🥉' });
+
+  // 2 till 11 månader (30 dagar per månad som måttstock)
+  for (let m = 2; m <= 11; m++) {
+    if (totalDays >= m * 30) {
+      milestones.push({ id: `${m}m`, label: `${m} månader`, icon: '🥈' });
+    }
+  }
+
+  // Hela år
+  const years = Math.floor(totalDays / 365);
+  for (let y = 1; y <= years; y++) {
+    milestones.push({ id: `${y}y`, label: `${y} år`, icon: '👑' });
+  }
+
+  return milestones;
+}
+
 function render() {
   const container = document.getElementById('categoriesContainer');
   if (!container) return;
@@ -79,6 +107,13 @@ function render() {
     const monthStr = !isNaN(start.getTime()) ? start.toLocaleDateString('sv-SE', { month: 'short' }).toUpperCase() : '-';
     const timeStr = formatTimeDifference(cat.startDate);
 
+    const milestones = getReachedMilestones(cat.startDate);
+    const latestMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
+
+    const badgeHtml = latestMilestone 
+      ? `<span class="badge-tag">${latestMilestone.icon} ${latestMilestone.label}</span>` 
+      : '';
+
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -89,7 +124,7 @@ function render() {
         </div>
         <div class="info-content">
           <div class="timer-text">${timeStr}</div>
-          <div class="item-name">${escapeHtml(cat.name)}</div>
+          <div class="item-name">${escapeHtml(cat.name)} ${badgeHtml}</div>
         </div>
       </div>
       <div class="action-btns">
@@ -197,7 +232,6 @@ function permanentDelete(id) {
   renderTrash();
 }
 
-// Hjälpfunktion för att konvertera Date-objekt till yyyy-MM-ddThh:mm för <input type="datetime-local">
 function formatDateForInput(dateObj) {
   const d = new Date(dateObj);
   if (isNaN(d.getTime())) return '';
@@ -323,5 +357,4 @@ function importData(event) {
   reader.readAsText(file);
 }
 
-// Kör initiering
 loadData();
