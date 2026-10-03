@@ -1,19 +1,33 @@
 const STORAGE_KEY = 'sober_app_obsidian_v10';
 
 let appData = {
-  categories: [
-    { id: '1', name: 'Alkohol', startDate: new Date().toISOString() },
-    { id: '2', name: 'Amfetamin', startDate: new Date().toISOString() },
-    { id: '3', name: 'Penis', startDate: new Date().toISOString() }
-  ],
+  categories: [],
   trash: []
 };
 
 function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
-    try { appData = JSON.parse(saved); if (!appData.trash) appData.trash = []; } catch (e) {}
+    try { 
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.categories)) {
+        appData = parsed;
+      }
+      if (!appData.trash) appData.trash = [];
+    } catch (e) {
+      console.error('Kunde inte läsa sparad data', e);
+    }
   }
+  
+  // Om inga kategorier finns sedan tidigare, lägg till standardkategorier enbart vid första start
+  if (!appData.categories || appData.categories.length === 0) {
+    appData.categories = [
+      { id: '1', name: 'Alkohol', startDate: new Date().toISOString() },
+      { id: '2', name: 'Amfetamin', startDate: new Date().toISOString() }
+    ];
+    saveData();
+  }
+
   updateHeaderDate();
   render();
   setInterval(render, 1000);
@@ -25,12 +39,20 @@ function saveData() {
 
 function updateHeaderDate() {
   const options = { day: 'numeric', month: 'short' };
-  document.getElementById('currentDateHeader').textContent = new Date().toLocaleDateString('sv-SE', options);
+  const el = document.getElementById('currentDateHeader');
+  if (el) {
+    el.textContent = new Date().toLocaleDateString('sv-SE', options);
+  }
 }
 
 function formatTimeDifference(startDateStr) {
   const start = new Date(startDateStr);
   const now = new Date();
+  
+  if (isNaN(start.getTime())) {
+    return "0å 0m 0d 00:00:00";
+  }
+
   let diff = Math.max(0, now - start);
 
   const seconds = Math.floor(diff / 1000) % 60;
@@ -48,12 +70,13 @@ function formatTimeDifference(startDateStr) {
 
 function render() {
   const container = document.getElementById('categoriesContainer');
+  if (!container) return;
   container.innerHTML = '';
 
   appData.categories.forEach(cat => {
     const start = new Date(cat.startDate);
-    const dayNum = start.getDate();
-    const monthStr = start.toLocaleDateString('sv-SE', { month: 'short' }).toUpperCase();
+    const dayNum = !isNaN(start.getTime()) ? start.getDate() : '-';
+    const monthStr = !isNaN(start.getTime()) ? start.toLocaleDateString('sv-SE', { month: 'short' }).toUpperCase() : '-';
     const timeStr = formatTimeDifference(cat.startDate);
 
     const card = document.createElement('div');
@@ -66,7 +89,7 @@ function render() {
         </div>
         <div class="info-content">
           <div class="timer-text">${timeStr}</div>
-          <div class="item-name">${cat.name}</div>
+          <div class="item-name">${escapeHtml(cat.name)}</div>
         </div>
       </div>
       <div class="action-btns">
@@ -78,8 +101,17 @@ function render() {
   });
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function renderTrash() {
   const trashContainer = document.getElementById('trashContainer');
+  if (!trashContainer) return;
   trashContainer.innerHTML = '';
 
   if (appData.trash.length === 0) {
@@ -91,7 +123,7 @@ function renderTrash() {
     const item = document.createElement('div');
     item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color);';
     item.innerHTML = `
-      <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${cat.name}</span>
+      <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${escapeHtml(cat.name)}</span>
       <div style="display: flex; gap: 8px;">
         <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="restoreCategory('${cat.id}')">Återställ</button>
         <button class="btn-outline" style="padding: 6px 10px; font-size: 0.8rem; color: #ef4444; border-color: rgba(239,68,68,0.4);" onclick="permanentDelete('${cat.id}')">Radera</button>
@@ -135,7 +167,9 @@ function resetCategory(id) {
 }
 
 function deleteCategory(id) {
-  showCustomConfirm('Radera inlägget?', () => {
+  const cat = appData.categories.find(c => c.id === id);
+  if (!cat) return;
+  showCustomConfirm(`Radera "${cat.name}"?`, () => {
     const index = appData.categories.findIndex(c => c.id === id);
     if (index !== -1) {
       const removed = appData.categories.splice(index, 1)[0];
@@ -163,6 +197,19 @@ function permanentDelete(id) {
   renderTrash();
 }
 
+// Hjälpfunktion för att konvertera Date-objekt till yyyy-MM-ddThh:mm för <input type="datetime-local">
+function formatDateForInput(dateObj) {
+  const d = new Date(dateObj);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 document.getElementById('trashBinBtn').addEventListener('click', () => {
   renderTrash();
   document.getElementById('trashModalOverlay').style.display = 'flex';
@@ -177,10 +224,7 @@ document.getElementById('addCatBtn').addEventListener('click', () => {
   document.getElementById('editCatId').value = '';
   document.getElementById('catNameInput').value = '';
   
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  document.getElementById('catDateInput').value = now.toISOString().slice(0, 16);
-  
+  document.getElementById('catDateInput').value = formatDateForInput(new Date());
   document.getElementById('modalOverlay').style.display = 'flex';
 });
 
@@ -192,10 +236,7 @@ function openEditModal(id) {
   document.getElementById('editCatId').value = cat.id;
   document.getElementById('catNameInput').value = cat.name;
 
-  const d = new Date(cat.startDate);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  document.getElementById('catDateInput').value = d.toISOString().slice(0, 16);
-
+  document.getElementById('catDateInput').value = formatDateForInput(new Date(cat.startDate));
   document.getElementById('modalOverlay').style.display = 'flex';
 }
 
@@ -207,19 +248,25 @@ function saveCategory() {
   const editId = document.getElementById('editCatId').value;
   const name = document.getElementById('catNameInput').value.trim();
   const dateVal = document.getElementById('catDateInput').value;
+  
   if (!name || !dateVal) return;
+
+  const parsedDate = new Date(dateVal);
+  if (isNaN(parsedDate.getTime())) return;
+
+  const isoString = parsedDate.toISOString();
 
   if (editId) {
     const cat = appData.categories.find(c => c.id === editId);
     if (cat) {
       cat.name = name;
-      cat.startDate = new Date(dateVal).toISOString();
+      cat.startDate = isoString;
     }
   } else {
     appData.categories.push({
       id: Date.now().toString(),
       name: name,
-      startDate: new Date(dateVal).toISOString()
+      startDate: isoString
     });
   }
 
@@ -238,9 +285,10 @@ function closeSettingsModal() {
 
 function exportData() {
   const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
   const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
   const fileName = `sober_${yy}${mm}${dd}.json`;
 
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
@@ -259,7 +307,7 @@ function importData(event) {
   reader.onload = function(e) {
     try {
       const parsed = JSON.parse(e.target.result);
-      if (parsed && parsed.categories) {
+      if (parsed && Array.isArray(parsed.categories)) {
         appData = parsed;
         if (!appData.trash) appData.trash = [];
         saveData();
@@ -275,4 +323,5 @@ function importData(event) {
   reader.readAsText(file);
 }
 
+// Kör initiering
 loadData();
