@@ -5,20 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sober</title>
   
-  <!-- PWA Manifest & Ikoner -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <link rel="apple-touch-icon" href="icon-512.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icon.png">
+  <link rel="apple-touch-icon" href="./icon.png">
   <meta name="theme-color" content="#05080c">
 
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="app-container">
-    
-    <!-- Top Navigation -->
     <header class="top-nav">
       <div class="header-left-group">
         <h1 class="header-sober">Sober</h1>
@@ -31,12 +27,10 @@
       </div>
     </header>
 
-    <!-- Category List -->
     <main class="list-container" id="categoriesContainer"></main>
-
   </div>
 
-  <!-- Modal: Add / Edit Category -->
+  <!-- Modal: Ny / Redigera -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card">
       <h2 id="modalTitle" style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Ny kategori</h2>
@@ -59,7 +53,7 @@
     </div>
   </div>
 
-  <!-- Modal: Settings (Export/Import) -->
+  <!-- Modal: Inställningar -->
   <div class="modal-overlay" id="settingsModalOverlay">
     <div class="modal-card">
       <h2 style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Inställningar</h2>
@@ -72,7 +66,7 @@
         
         <label class="btn-outline" style="text-align: center; cursor: pointer; display: block;">
           Ladda upp fil (Import)
-          <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importData(event)">
+          <input type="file" id="importFileInput" accept=".json,application/json,text/plain,*/*" style="display: none;" onchange="importData(event)">
         </label>
       </div>
 
@@ -80,18 +74,16 @@
     </div>
   </div>
 
-  <!-- Modal: Trash Bin -->
+  <!-- Modal: Papperskorg -->
   <div class="modal-overlay" id="trashModalOverlay">
     <div class="modal-card">
       <h2 style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Papperskorg</h2>
-      <div id="trashContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; margin-bottom: 20px;">
-        <!-- Dynamiska rader hamnar här -->
-      </div>
+      <div id="trashContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; margin-bottom: 20px;"></div>
       <button class="btn-outline" style="width: 100%;" onclick="closeTrashModal()">Stäng</button>
     </div>
   </div>
 
-  <!-- Modal: Custom Confirm Dialog -->
+  <!-- Modal: Bekräfta -->
   <div class="modal-overlay" id="confirmModalOverlay">
     <div class="modal-card">
       <p id="confirmModalText" style="margin-bottom: 20px; color: #fff; font-size: 1rem; text-align: center; font-weight: 600;"></p>
@@ -102,6 +94,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js"></script>
 </body>
 </html>

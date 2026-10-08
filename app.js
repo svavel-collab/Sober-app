@@ -1,7 +1,9 @@
 const STORAGE_KEY = 'sober_app_obsidian_v10';
 
 let appData = {
-  categories: [],
+  categories: [
+    { id: '1', name: 'Alkohol', startDate: new Date().toISOString() }
+  ],
   trash: []
 };
 
@@ -9,24 +11,10 @@ function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try { 
-      const parsed = JSON.parse(saved);
-      if (parsed && Array.isArray(parsed.categories)) {
-        appData = parsed;
-      }
-      if (!appData.trash) appData.trash = [];
-    } catch (e) {
-      console.error('Kunde inte läsa sparad data', e);
-    }
+      appData = JSON.parse(saved); 
+      if (!appData.trash) appData.trash = []; 
+    } catch (e) {}
   }
-  
-  if (!appData.categories || appData.categories.length === 0) {
-    appData.categories = [
-      { id: '1', name: 'Alkohol', startDate: new Date().toISOString() },
-      { id: '2', name: 'Amfetamin', startDate: new Date().toISOString() }
-    ];
-    saveData();
-  }
-
   updateHeaderDate();
   render();
   setInterval(render, 1000);
@@ -38,20 +26,12 @@ function saveData() {
 
 function updateHeaderDate() {
   const options = { day: 'numeric', month: 'short' };
-  const el = document.getElementById('currentDateHeader');
-  if (el) {
-    el.textContent = new Date().toLocaleDateString('sv-SE', options);
-  }
+  document.getElementById('currentDateHeader').textContent = new Date().toLocaleDateString('sv-SE', options);
 }
 
 function formatTimeDifference(startDateStr) {
   const start = new Date(startDateStr);
   const now = new Date();
-  
-  if (isNaN(start.getTime())) {
-    return "0å 0m 0d 00:00:00";
-  }
-
   let diff = Math.max(0, now - start);
 
   const seconds = Math.floor(diff / 1000) % 60;
@@ -67,52 +47,31 @@ function formatTimeDifference(startDateStr) {
   return `${years}å ${months}m ${remainingDays}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
-function getReachedMilestones(startDateStr) {
-  const start = new Date(startDateStr);
-  const now = new Date();
-  if (isNaN(start.getTime())) return [];
-
-  const diffMs = Math.max(0, now - start);
-  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  const milestones = [];
-
-  // 30 dagar
-  if (totalDays >= 30) milestones.push({ id: '30d', label: '30 dagar', icon: '🥉' });
-
-  // 2 till 11 månader (30 dagar per månad som måttstock)
-  for (let m = 2; m <= 11; m++) {
-    if (totalDays >= m * 30) {
-      milestones.push({ id: `${m}m`, label: `${m} månader`, icon: '🥈' });
-    }
-  }
-
-  // Hela år
-  const years = Math.floor(totalDays / 365);
-  for (let y = 1; y <= years; y++) {
-    milestones.push({ id: `${y}y`, label: `${y} år`, icon: '👑' });
-  }
-
-  return milestones;
+function getMilestoneBadge(days) {
+  if (days >= 365) return '🏆 1 År';
+  if (days >= 180) return '🥇 6 Mån';
+  if (days >= 90) return '🥈 3 Mån';
+  if (days >= 30) return '🥉 1 Mån';
+  if (days >= 7) return '⭐ 1 Vecka';
+  if (days >= 1) return '✨ 1 Dag';
+  return null;
 }
 
 function render() {
   const container = document.getElementById('categoriesContainer');
-  if (!container) return;
   container.innerHTML = '';
 
   appData.categories.forEach(cat => {
     const start = new Date(cat.startDate);
-    const dayNum = !isNaN(start.getTime()) ? start.getDate() : '-';
-    const monthStr = !isNaN(start.getTime()) ? start.toLocaleDateString('sv-SE', { month: 'short' }).toUpperCase() : '-';
+    const now = new Date();
+    const dayNum = start.getDate();
+    const monthStr = start.toLocaleDateString('sv-SE', { month: 'short' }).toUpperCase();
     const timeStr = formatTimeDifference(cat.startDate);
 
-    const milestones = getReachedMilestones(cat.startDate);
-    const latestMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
-
-    const badgeHtml = latestMilestone 
-      ? `<span class="badge-tag">${latestMilestone.icon} ${latestMilestone.label}</span>` 
-      : '';
+    const diffMs = Math.max(0, now - start);
+    const daysDiff = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const badge = getMilestoneBadge(daysDiff);
+    const badgeHtml = badge ? `<span class="badge-tag">${badge}</span>` : '';
 
     const card = document.createElement('div');
     card.className = 'card';
@@ -124,7 +83,10 @@ function render() {
         </div>
         <div class="info-content">
           <div class="timer-text">${timeStr}</div>
-          <div class="item-name">${escapeHtml(cat.name)} ${badgeHtml}</div>
+          <div class="item-name">
+            ${cat.name}
+            ${badgeHtml}
+          </div>
         </div>
       </div>
       <div class="action-btns">
@@ -136,17 +98,8 @@ function render() {
   });
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function renderTrash() {
   const trashContainer = document.getElementById('trashContainer');
-  if (!trashContainer) return;
   trashContainer.innerHTML = '';
 
   if (appData.trash.length === 0) {
@@ -158,7 +111,7 @@ function renderTrash() {
     const item = document.createElement('div');
     item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color);';
     item.innerHTML = `
-      <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${escapeHtml(cat.name)}</span>
+      <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${cat.name}</span>
       <div style="display: flex; gap: 8px;">
         <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="restoreCategory('${cat.id}')">Återställ</button>
         <button class="btn-outline" style="padding: 6px 10px; font-size: 0.8rem; color: #ef4444; border-color: rgba(239,68,68,0.4);" onclick="permanentDelete('${cat.id}')">Radera</button>
@@ -202,9 +155,7 @@ function resetCategory(id) {
 }
 
 function deleteCategory(id) {
-  const cat = appData.categories.find(c => c.id === id);
-  if (!cat) return;
-  showCustomConfirm(`Radera "${cat.name}"?`, () => {
+  showCustomConfirm('Radera inlägget?', () => {
     const index = appData.categories.findIndex(c => c.id === id);
     if (index !== -1) {
       const removed = appData.categories.splice(index, 1)[0];
@@ -232,18 +183,6 @@ function permanentDelete(id) {
   renderTrash();
 }
 
-function formatDateForInput(dateObj) {
-  const d = new Date(dateObj);
-  if (isNaN(d.getTime())) return '';
-  const pad = (n) => String(n).padStart(2, '0');
-  const year = d.getFullYear();
-  const month = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  const hours = pad(d.getHours());
-  const minutes = pad(d.getMinutes());
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
 document.getElementById('trashBinBtn').addEventListener('click', () => {
   renderTrash();
   document.getElementById('trashModalOverlay').style.display = 'flex';
@@ -258,7 +197,10 @@ document.getElementById('addCatBtn').addEventListener('click', () => {
   document.getElementById('editCatId').value = '';
   document.getElementById('catNameInput').value = '';
   
-  document.getElementById('catDateInput').value = formatDateForInput(new Date());
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('catDateInput').value = now.toISOString().slice(0, 16);
+  
   document.getElementById('modalOverlay').style.display = 'flex';
 });
 
@@ -270,7 +212,10 @@ function openEditModal(id) {
   document.getElementById('editCatId').value = cat.id;
   document.getElementById('catNameInput').value = cat.name;
 
-  document.getElementById('catDateInput').value = formatDateForInput(new Date(cat.startDate));
+  const d = new Date(cat.startDate);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  document.getElementById('catDateInput').value = d.toISOString().slice(0, 16);
+
   document.getElementById('modalOverlay').style.display = 'flex';
 }
 
@@ -282,25 +227,19 @@ function saveCategory() {
   const editId = document.getElementById('editCatId').value;
   const name = document.getElementById('catNameInput').value.trim();
   const dateVal = document.getElementById('catDateInput').value;
-  
   if (!name || !dateVal) return;
-
-  const parsedDate = new Date(dateVal);
-  if (isNaN(parsedDate.getTime())) return;
-
-  const isoString = parsedDate.toISOString();
 
   if (editId) {
     const cat = appData.categories.find(c => c.id === editId);
     if (cat) {
       cat.name = name;
-      cat.startDate = isoString;
+      cat.startDate = new Date(dateVal).toISOString();
     }
   } else {
     appData.categories.push({
       id: Date.now().toString(),
       name: name,
-      startDate: isoString
+      startDate: new Date(dateVal).toISOString()
     });
   }
 
@@ -319,19 +258,21 @@ function closeSettingsModal() {
 
 function exportData() {
   const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
   const yy = String(d.getFullYear()).slice(-2);
-  const mm = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
   const fileName = `sober_${yy}${mm}${dd}.json`;
 
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+  const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
   const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("href", url);
   downloadAnchor.setAttribute("download", fileName);
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 function importData(event) {
@@ -341,7 +282,7 @@ function importData(event) {
   reader.onload = function(e) {
     try {
       const parsed = JSON.parse(e.target.result);
-      if (parsed && Array.isArray(parsed.categories)) {
+      if (parsed && parsed.categories) {
         appData = parsed;
         if (!appData.trash) appData.trash = [];
         saveData();
@@ -358,3 +299,9 @@ function importData(event) {
 }
 
 loadData();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
