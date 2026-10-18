@@ -1,4 +1,10 @@
-const STORAGE_KEY = 'sober_app_obsidian_v10';
+const DB_NAME = 'SoberAppDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'app_state';
+const DATA_KEY = 'sober_data';
+const OLD_LOCALSTORAGE_KEY = 'sober_app_obsidian_v10';
+
+let db = null;
 
 let appData = {
   categories: [
@@ -7,21 +13,102 @@ let appData = {
   trash: []
 };
 
-function loadData() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try { 
-      appData = JSON.parse(saved); 
-      if (!appData.trash) appData.trash = []; 
-    } catch (e) {}
+// --- IndexedDB Helper Functions ---
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = (event) => {
+      const dbInstance = event.target.result;
+      if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+        dbInstance.createObjectStore(STORE_NAME);
+      }
+    };
+
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      resolve(db);
+    };
+
+    request.onerror = (event) => {
+      console.error('IndexedDB error:', event.target.error);
+      reject(event.target.error);
+    };
+  });
+}
+
+function getStoredData() {
+  return new Promise((resolve) => {
+    if (!db) return resolve(null);
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.get(DATA_KEY);
+
+    request.onsuccess = () => {
+      resolve(request.result || null);
+    };
+
+    request.onerror = () => {
+      resolve(null);
+    };
+  });
+}
+
+function saveStoredData(data) {
+  return new Promise((resolve, reject) => {
+    if (!db) return reject('Database not opened');
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put(data, DATA_KEY);
+
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+// --- App Logic ---
+
+async function loadData() {
+  try {
+    await openDatabase();
+    const stored = await getStoredData();
+
+    if (stored) {
+      appData = stored;
+      if (!appData.trash) appData.trash = [];
+    } else {
+      const oldSaved = localStorage.getItem(OLD_LOCALSTORAGE_KEY);
+      if (oldSaved) {
+        try {
+          const parsed = JSON.parse(oldSaved);
+          if (parsed && parsed.categories) {
+            appData = parsed;
+            if (!appData.trash) appData.trash = [];
+            await saveStoredData(appData);
+          }
+        } catch (e) {
+          console.error('Kunde inte migrera från localStorage:', e);
+        }
+      } else {
+        await saveStoredData(appData);
+      }
+    }
+  } catch (err) {
+    console.warn('Fallback till minneslagring vid fel i IndexedDB:', err);
   }
+
   updateHeaderDate();
   render();
   setInterval(render, 1000);
 }
 
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+async function saveData() {
+  try {
+    await saveStoredData(appData);
+  } catch (e) {
+    console.error('Kunde inte spara till IndexedDB:', e);
+  }
 }
 
 function updateHeaderDate() {
@@ -59,6 +146,7 @@ function getMilestoneBadge(days) {
 
 function render() {
   const container = document.getElementById('categoriesContainer');
+  if (!container) return;
   container.innerHTML = '';
 
   appData.categories.forEach(cat => {
@@ -100,6 +188,7 @@ function render() {
 
 function renderTrash() {
   const trashContainer = document.getElementById('trashContainer');
+  if (!trashContainer) return;
   trashContainer.innerHTML = '';
 
   if (appData.trash.length === 0) {
@@ -144,46 +233,46 @@ function showCustomConfirm(message, onOk) {
   });
 }
 
-function resetCategory(id) {
+async function resetCategory(id) {
   const cat = appData.categories.find(c => c.id === id);
   if (!cat) return;
-  showCustomConfirm(`Nollställ "${cat.name}" till nu?`, () => {
+  showCustomConfirm(`Nollställ "${cat.name}" till nu?`, async () => {
     cat.startDate = new Date().toISOString();
-    saveData();
+    await saveData();
     render();
   });
 }
 
-function deleteCategory(id) {
-  showCustomConfirm('Radera inlägget?', () => {
+async function deleteCategory(id) {
+  showCustomConfirm('Radera inlägget?', async () => {
     const index = appData.categories.findIndex(c => c.id === id);
     if (index !== -1) {
       const removed = appData.categories.splice(index, 1)[0];
       appData.trash.push(removed);
-      saveData();
+      await saveData();
       render();
     }
   });
 }
 
-function restoreCategory(id) {
+async function restoreCategory(id) {
   const index = appData.trash.findIndex(c => c.id === id);
   if (index !== -1) {
     const restored = appData.trash.splice(index, 1)[0];
     appData.categories.push(restored);
-    saveData();
+    await saveData();
     render();
     renderTrash();
   }
 }
 
-function permanentDelete(id) {
+async function permanentDelete(id) {
   appData.trash = appData.trash.filter(c => c.id !== id);
-  saveData();
+  await saveData();
   renderTrash();
 }
 
-document.getElementById('trashBinBtn').addEventListener('click', () => {
+document.getElementById('trashBinBtn')?.addEventListener('click', () => {
   renderTrash();
   document.getElementById('trashModalOverlay').style.display = 'flex';
 });
@@ -192,7 +281,7 @@ function closeTrashModal() {
   document.getElementById('trashModalOverlay').style.display = 'none';
 }
 
-document.getElementById('addCatBtn').addEventListener('click', () => {
+document.getElementById('addCatBtn')?.addEventListener('click', () => {
   document.getElementById('modalTitle').textContent = 'Ny kategori';
   document.getElementById('editCatId').value = '';
   document.getElementById('catNameInput').value = '';
@@ -223,7 +312,7 @@ function closeModal() {
   document.getElementById('modalOverlay').style.display = 'none';
 }
 
-function saveCategory() {
+async function saveCategory() {
   const editId = document.getElementById('editCatId').value;
   const name = document.getElementById('catNameInput').value.trim();
   const dateVal = document.getElementById('catDateInput').value;
@@ -243,59 +332,9 @@ function saveCategory() {
     });
   }
 
-  saveData();
+  await saveData();
   render();
   closeModal();
-}
-
-document.getElementById('settingsBtn').addEventListener('click', () => {
-  document.getElementById('settingsModalOverlay').style.display = 'flex';
-});
-
-function closeSettingsModal() {
-  document.getElementById('settingsModalOverlay').style.display = 'none';
-}
-
-function exportData() {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const fileName = `sober_${yy}${mm}${dd}.json`;
-
-  const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", url);
-  downloadAnchor.setAttribute("download", fileName);
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
-  URL.revokeObjectURL(url);
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      if (parsed && parsed.categories) {
-        appData = parsed;
-        if (!appData.trash) appData.trash = [];
-        saveData();
-        render();
-        closeSettingsModal();
-      } else {
-        showCustomConfirm('Ogiltig filstruktur.', () => {});
-      }
-    } catch (err) {
-      showCustomConfirm('Kunde inte läsa JSON-filen.', () => {});
-    }
-  };
-  reader.readAsText(file);
 }
 
 loadData();

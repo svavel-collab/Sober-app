@@ -22,7 +22,6 @@
       </div>
       <div class="nav-icons-right">
         <button class="icon-btn" id="trashBinBtn" title="Papperskorg">🗑️</button>
-        <button class="icon-btn" id="settingsBtn" title="Inställningar">⚙️</button>
         <button class="icon-btn" id="addCatBtn" title="Lägg till">+</button>
       </div>
     </header>
@@ -50,27 +49,6 @@
         <button class="btn-outline" onclick="closeModal()">Avbryt</button>
         <button class="btn-primary" onclick="saveCategory()">Spara</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Modal: Inställningar -->
-  <div class="modal-overlay" id="settingsModalOverlay">
-    <div class="modal-card">
-      <h2 style="margin-bottom: 16px; color: #fff; font-size: 1.2rem;">Inställningar</h2>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-        Säkerhetskopiera din data eller återställ från en tidigare JSON-fil.
-      </p>
-
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-        <button class="btn-primary" onclick="exportData()">Spara ner fil (Export)</button>
-        
-        <label class="btn-outline" style="text-align: center; cursor: pointer; display: block;">
-          Ladda upp fil (Import)
-          <input type="file" id="importFileInput" accept=".json,application/json,text/plain,*/*" style="display: none;" onchange="importData(event)">
-        </label>
-      </div>
-
-      <button class="btn-outline" style="width: 100%;" onclick="closeSettingsModal()">Stäng</button>
     </div>
   </div>
 
